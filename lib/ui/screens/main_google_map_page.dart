@@ -1,9 +1,12 @@
 
 import 'package:address_transfer/ui/widgets/border_text_field.dart';
+import 'package:address_transfer/ui/widgets/floating_modal.dart';
 import 'package:address_transfer/ui/widgets/simple_text_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 class MainGoogleMapPage extends StatefulWidget {
   static const CameraPosition _kGooglePlex = CameraPosition(
@@ -20,6 +23,29 @@ class MainGoogleMapPage extends StatefulWidget {
 
 class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   List<Marker> _markers = [];
+
+  Future<Widget?> showDetailInfoFloatingModel(LatLng target) {
+    return showFloatingModalBottomSheet(
+        context: context,
+        barrierColor: Colors.transparent,
+        builder: (context) => detailInfo(target)
+    );
+  }
+  
+  Widget detailInfo(LatLng target) {
+    return Container(
+      height: 120.h,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(8))
+      ),
+      child: Column(
+        children: [
+          SimpleTextWidget(text: "Latitude ::${target.latitude}", fontSize: 24),
+          SimpleTextWidget(text: "Longitude :: ${target.longitude}", fontSize: 24,)
+        ],
+      ),
+    );
+  }
 
   @override
   void initState() {
@@ -40,6 +66,9 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
         markerId: MarkerId('1'),
         position: LatLng(_position.target.latitude, _position.target.longitude),
         draggable: true,
+        onTap: () {
+          showDetailInfoFloatingModel(_position.target);
+        }
       ),
     );
     setState(() {});
