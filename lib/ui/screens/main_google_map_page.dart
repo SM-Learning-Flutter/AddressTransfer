@@ -1,12 +1,14 @@
 
 import 'package:address_transfer/ui/widgets/border_text_field.dart';
-import 'package:address_transfer/ui/widgets/floating_modal.dart';
 import 'package:address_transfer/ui/widgets/simple_text_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:draggable_bottom_sheet/draggable_bottom_sheet.dart';
+import 'package:sliding_up_panel/sliding_up_panel.dart';
+
+import '../widgets/address_detail_widget.dart';
 
 class MainGoogleMapPage extends StatefulWidget {
   static const CameraPosition _kGooglePlex = CameraPosition(
@@ -24,11 +26,13 @@ class MainGoogleMapPage extends StatefulWidget {
 class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   List<Marker> _markers = [];
 
-  Future<Widget?> showDetailInfoFloatingModel(LatLng target) {
-    return showFloatingModalBottomSheet(
-        context: context,
-        barrierColor: Colors.transparent,
-        builder: (context) => detailInfo(target)
+  DraggableBottomSheet showDetailInfoFloatingModel(LatLng target) {
+    return DraggableBottomSheet(
+      minExtent: 56.h,
+      previewWidget: AddressDetailWidget(),
+      backgroundWidget: AddressDetailWidget(),
+      expandedWidget: AddressDetailWidget(),
+      onDragging: (double ) {  },
     );
   }
   
@@ -97,39 +101,45 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     );
   }
 
+  Widget mainGoogleMapWidget() {
+    return Stack(
+      children: [
+        Container(
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height,
+          child: ClipRRect(
+            borderRadius: const BorderRadius.only(
+              topLeft: Radius.circular(30),
+              topRight: Radius.circular(30),
+            ),
+            child: Align(
+              alignment: Alignment.bottomRight,
+              heightFactor: 0.3,
+              widthFactor: 2.5,
+              child: googleMap(),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: searchBarWidget(),
+        ),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: Stack(
-          children: [
-            Container(
-              width: MediaQuery.of(context).size.width,
-              height: MediaQuery.of(context).size.height,
-              child: ClipRRect(
-                borderRadius: const BorderRadius.only(
-                  topLeft: Radius.circular(30),
-                  topRight: Radius.circular(30),
-                ),
-                child: Align(
-                  alignment: Alignment.bottomRight,
-                  heightFactor: 0.3,
-                  widthFactor: 2.5,
-                  child: googleMap(),
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: searchBarWidget(),
-            ),
-          ],
-        ),
+        child: SlidingUpPanel(
+          panel: AddressDetailWidget(),
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+          minHeight: 56.h,
+          maxHeight: 340.h,
+          body: mainGoogleMapWidget(),
+        )
       ),
-      floatingActionButton: FloatingActionButton.extended(
-          onPressed: () {},
-          label: const SimpleTextWidget(text: "주소 변환", fontSize: 16,)),
-      floatingActionButtonLocation: FloatingActionButtonLocation.startFloat,
     );
   }
 }
