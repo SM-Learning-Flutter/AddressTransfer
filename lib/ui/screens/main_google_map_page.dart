@@ -1,4 +1,5 @@
 
+import 'package:address_transfer/ui/provider/address_detail_provider.dart';
 import 'package:address_transfer/ui/widgets/border_text_field.dart';
 import 'package:address_transfer/ui/widgets/simple_text_widget.dart';
 import 'package:flutter/cupertino.dart';
@@ -6,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
+import 'package:provider/provider.dart';
 
 import '../widgets/address_detail_widget.dart';
 
@@ -23,7 +25,13 @@ class MainGoogleMapPage extends StatefulWidget {
 }
 
 class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
+  late AddressDetailProvider _addressDetailProvider;
+  
   List<Marker> _markers = [];
+
+  final PanelController _panelController = PanelController();
+
+  String title = "";
   
   Widget detailInfo(LatLng target) {
     return Container(
@@ -60,10 +68,12 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
         position: LatLng(_position.target.latitude, _position.target.longitude),
         draggable: true,
         onTap: () {
+          _panelController.show();
         }
       ),
     );
-    setState(() {});
+    setState(() {
+    });
   }
 
   Widget searchBarWidget() {
@@ -85,7 +95,16 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
       markers: Set.from(_markers),
       initialCameraPosition: MainGoogleMapPage._kGooglePlex,
       myLocationButtonEnabled: false,
-      onCameraMove: ((_position) => _updatePosition(_position)),
+      onCameraMoveStarted: () {
+        _panelController.close();
+      },
+      onCameraMove: (_position) => {
+        _updatePosition(_position),
+        title = _position.target.latitude.toString()
+      },
+      onCameraIdle: () {
+        _addressDetailProvider.setTitle(title);
+        },
     );
   }
 
@@ -118,13 +137,15 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
 
   @override
   Widget build(BuildContext context) {
+    _addressDetailProvider = Provider.of<AddressDetailProvider>(context, listen: false);
     return Scaffold(
       body: SafeArea(
         child: SlidingUpPanel(
           panel: AddressDetailWidget(),
           borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
           minHeight: 56.h,
-          maxHeight: 340.h,
+          maxHeight: 150.h,
+          controller: _panelController,
           body: mainGoogleMapWidget(),
         )
       ),
