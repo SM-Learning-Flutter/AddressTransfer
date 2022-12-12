@@ -1,4 +1,3 @@
-
 import 'package:address_transfer/ui/widgets/border_text_field.dart';
 import 'package:address_transfer/ui/widgets/simple_text_widget.dart';
 import 'package:flutter/cupertino.dart';
@@ -15,7 +14,6 @@ class MainGoogleMapPage extends StatefulWidget {
     zoom: 14.4746,
   );
 
-
   MainGoogleMapPage({Key? key}) : super(key: key);
 
   @override
@@ -24,17 +22,20 @@ class MainGoogleMapPage extends StatefulWidget {
 
 class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   List<Marker> _markers = [];
-  
+  bool _flag = false;
+
   Widget detailInfo(LatLng target) {
     return Container(
       height: 120.h,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(8))
-      ),
+      decoration:
+          BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(8))),
       child: Column(
         children: [
           SimpleTextWidget(text: "Latitude ::${target.latitude}", fontSize: 24),
-          SimpleTextWidget(text: "Longitude :: ${target.longitude}", fontSize: 24,)
+          SimpleTextWidget(
+            text: "Longitude :: ${target.longitude}",
+            fontSize: 24,
+          )
         ],
       ),
     );
@@ -51,34 +52,36 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   }
 
   void _updatePosition(CameraPosition _position) {
-    var m = _markers.firstWhere((p) => p.markerId == MarkerId('1'),
-        orElse: null);
+    var m =
+        _markers.firstWhere((p) => p.markerId == MarkerId('1'), orElse: null);
     _markers.remove(m);
     _markers.add(
       Marker(
-        markerId: MarkerId('1'),
-        position: LatLng(_position.target.latitude, _position.target.longitude),
-        draggable: true,
-        onTap: () {
-        }
-      ),
+          markerId: MarkerId('1'),
+          position:
+              LatLng(_position.target.latitude, _position.target.longitude),
+          draggable: true,
+          onTap: () {
+            setState(() {
+              _flag = _flag ? false : true;
+            });
+          }),
     );
     setState(() {});
   }
 
   Widget searchBarWidget() {
     return SizedBox(
-      width: MediaQuery.of(context).size.width,
-      height: 56,
-      child: const BorderTextField(
-        labelFontSize: 24,
-        labelText: "주소 검색",
-        borderColor: Colors.white60,
-        borderRadius: BorderRadius.all(Radius.circular(36)),
-      )
-    );
+        width: MediaQuery.of(context).size.width,
+        height: 56,
+        child: const BorderTextField(
+          labelFontSize: 24,
+          labelText: "주소 검색",
+          borderColor: Colors.white60,
+          borderRadius: BorderRadius.all(Radius.circular(36)),
+        ));
   }
-  
+
   Widget googleMap() {
     return GoogleMap(
       mapType: MapType.normal,
@@ -86,6 +89,18 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
       initialCameraPosition: MainGoogleMapPage._kGooglePlex,
       myLocationButtonEnabled: false,
       onCameraMove: ((_position) => _updatePosition(_position)),
+      onCameraIdle: (() => debugPrint("call address api")),
+    );
+  }
+
+  Widget AddressDetail(minHeight, maxHeight) {
+    return SlidingUpPanel(
+      panel: AddressDetailWidget(),
+      borderRadius: BorderRadius.only(
+          topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+      minHeight: minHeight,
+      maxHeight: maxHeight,
+      body: mainGoogleMapWidget(),
     );
   }
 
@@ -120,13 +135,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: SlidingUpPanel(
-          panel: AddressDetailWidget(),
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-          minHeight: 56.h,
-          maxHeight: 340.h,
-          body: mainGoogleMapWidget(),
-        )
+        child: _flag ? AddressDetail(95.h, 340.h) : AddressDetail(56.h, 340.h),
       ),
     );
   }
