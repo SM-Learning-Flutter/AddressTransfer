@@ -5,7 +5,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:draggable_bottom_sheet/draggable_bottom_sheet.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import '../widgets/address_detail_widget.dart';
@@ -25,16 +24,6 @@ class MainGoogleMapPage extends StatefulWidget {
 
 class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   List<Marker> _markers = [];
-
-  DraggableBottomSheet showDetailInfoFloatingModel(LatLng target) {
-    return DraggableBottomSheet(
-      minExtent: 56.h,
-      previewWidget: AddressDetailWidget(),
-      backgroundWidget: AddressDetailWidget(),
-      expandedWidget: AddressDetailWidget(),
-      onDragging: (double ) {  },
-    );
-  }
   
   Widget detailInfo(LatLng target) {
     return Container(
@@ -71,7 +60,6 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
         position: LatLng(_position.target.latitude, _position.target.longitude),
         draggable: true,
         onTap: () {
-          showDetailInfoFloatingModel(_position.target);
         }
       ),
     );
