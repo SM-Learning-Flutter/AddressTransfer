@@ -88,8 +88,15 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
       markers: Set.from(_markers),
       initialCameraPosition: MainGoogleMapPage._kGooglePlex,
       myLocationButtonEnabled: false,
-      onCameraMove: ((_position) => _updatePosition(_position)),
-      onCameraIdle: (() => debugPrint("call address api")),
+      onCameraMove: (_position) => {
+        _updatePosition(_position),
+        setState(() {
+          _flag = false;
+        }),
+      },
+      onCameraIdle: () => {
+        debugPrint("call address api"),
+      },
     );
   }
 
