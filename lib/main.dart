@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_config/flutter_config.dart';
 import 'app.dart';
@@ -8,4 +7,3 @@ void main() async {
   await FlutterConfig.loadEnvVariables(); //추가
   runApp(const App());
 }
-
