@@ -8,6 +8,12 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:provider/provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:flutter_config/flutter_config.dart';
+import 'dart:convert';
+import '../../model/geoApi.dart';
+import 'dart:developer';
+import 'package:logger/logger.dart';
 
 import '../widgets/address_detail_widget.dart';
 
@@ -26,7 +32,7 @@ class MainGoogleMapPage extends StatefulWidget {
 
 class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   late AddressDetailProvider _addressDetailProvider;
-  
+  List<String> _geo = ['test'];
   List<Marker> _markers = [];
 
   final PanelController _panelController = PanelController();
@@ -46,6 +52,75 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
         ],
       ),
     );
+  }
+
+  void showShortHeightModalBottomSheet(BuildContext context) {
+    showBarModalBottomSheet(
+        context: context,
+        enableDrag: true,
+        bounce: true,
+        isDismissible: true,
+        builder: (BuildContext context) {
+          return SizedBox(
+            // SizedBox로 감싸고 height로 높이를 설정.
+            height: 100,
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: <Widget>[
+                  FutureBuilder(
+                      future: getMarker(),
+                      builder: (BuildContext context, AsyncSnapshot snapshot) {
+                        //해당 부분은 data를 아직 받아 오지 못했을때 실행되는 부분을 의미한다.
+                        if (snapshot.hasData == false) {
+                          return CircularProgressIndicator();
+                        }
+                        //error가 발생하게 될 경우 반환하게 되는 부분
+                        else if (snapshot.hasError) {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              'Error: ${snapshot.error}',
+                              style: TextStyle(fontSize: 15),
+                            ),
+                          );
+                        }
+                        // 데이터를 정상적으로 받아오게 되면 다음 부분을 실행하게 되는 것이다.
+                        else {
+                          return Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              snapshot.data.toString(),
+                              style: TextStyle(fontSize: 15),
+                            ),
+                          );
+                        }
+                      }),
+                  ElevatedButton(
+                    child: Text('cancel'),
+                    onPressed: () => Navigator.pop(context),
+                  )
+                ],
+              ),
+            ),
+          );
+        },
+  }
+
+  Future<String> getMarker() async {
+
+    String gpsUrl =
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=${_markers.last.position.latitude},${_markers.last.position.longitude}&key=${FlutterConfig.get('apiKey')}';
+
+    final response = await http.get(Uri.parse(gpsUrl));
+
+    if(response.statusCode == 200){
+      _geo.add(jsonDecode(response.body)['results'][0]['formatted_address']);
+      return jsonDecode(response.body)['results'][0]['formatted_address'];
+    } else {
+      throw Exception('Failed to load album');
+    }
   }
 
   @override
