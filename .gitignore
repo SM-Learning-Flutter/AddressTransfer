@@ -50,3 +50,4 @@ android/app/src/main/AndroidManifest.xml
 # API_KEYS
 .env*
 android/app/src/main/AndroidManifest.xml
+pubspec.lock

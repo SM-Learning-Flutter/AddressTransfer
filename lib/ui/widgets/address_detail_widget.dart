@@ -38,27 +38,7 @@ class AddressDetailWidget extends StatelessWidget {
           ),
           Padding(
             padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
-            child: SimpleTextWidget(
-              text: "일본, 810-0004 Fukuoka, Chuo Ward, Watanabe",
-              fontSize: 16.sp,
-              color: Colors.grey,
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 4.h, left: 8.w, right: 8.w),
-            child: SimpleTextWidget(
-              text: "건축물용도",
-              fontSize: 16.sp,
-              color: Colors.grey,
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
-            child: SimpleTextWidget(
-              text: "url",
-              fontSize: 16.sp,
-              color: Colors.grey,
-            ),
+            child: SimpleTextWidget(text: "일본, 810-0004 Fukuoka, Chuo Ward, Watanabe",fontSize: 16.sp, color: Colors.grey,),
           ),
           Padding(
             padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
@@ -113,14 +93,15 @@ class AddressDetailWidget extends StatelessWidget {
     return SizedBox(
       height: 200.h,
       child: ListView.builder(
-          itemCount: images.length,
-          scrollDirection: Axis.horizontal,
-          itemBuilder: (BuildContext context, int index) {
-            return Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.network(images[index]),
-            );
-          }),
+        itemCount: images.length,
+        scrollDirection: Axis.horizontal,
+        itemBuilder: (BuildContext context, int index) {
+          return Padding(
+            padding: const EdgeInsets.all(8.0),
+            child: Image.network(images[index]),
+          );
+        }
+      ),
     );
   }
 }

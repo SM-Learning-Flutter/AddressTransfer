@@ -17,6 +17,7 @@ class MainGoogleMapPage extends StatefulWidget {
     zoom: 14.4746,
   );
 
+
   MainGoogleMapPage({Key? key}) : super(key: key);
 
   @override
@@ -35,15 +36,13 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   Widget detailInfo(LatLng target) {
     return Container(
       height: 120.h,
-      decoration:
-          BoxDecoration(borderRadius: BorderRadius.all(Radius.circular(8))),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(8))
+      ),
       child: Column(
         children: [
           SimpleTextWidget(text: "Latitude ::${target.latitude}", fontSize: 24),
-          SimpleTextWidget(
-            text: "Longitude :: ${target.longitude}",
-            fontSize: 24,
-          )
+          SimpleTextWidget(text: "Longitude :: ${target.longitude}", fontSize: 24,)
         ],
       ),
     );
@@ -60,20 +59,18 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   }
 
   void _updatePosition(CameraPosition _position) {
-    var m =
-        _markers.firstWhere((p) => p.markerId == MarkerId('1'), orElse: null);
+    var m = _markers.firstWhere((p) => p.markerId == MarkerId('1'),
+        orElse: null);
     _markers.remove(m);
     _markers.add(
       Marker(
-          markerId: MarkerId('1'),
-          position:
-              LatLng(_position.target.latitude, _position.target.longitude),
-          draggable: true,
-          onTap: () {
-            setState(() {
-              _flag = _flag ? false : true;
-            });
-          }),
+        markerId: MarkerId('1'),
+        position: LatLng(_position.target.latitude, _position.target.longitude),
+        draggable: true,
+        onTap: () {
+          _panelController.show();
+        }
+      ),
     );
     setState(() {
     });
@@ -81,42 +78,33 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
 
   Widget searchBarWidget() {
     return SizedBox(
-        width: MediaQuery.of(context).size.width,
-        height: 56,
-        child: const BorderTextField(
-          labelFontSize: 24,
-          labelText: "주소 검색",
-          borderColor: Colors.white60,
-          borderRadius: BorderRadius.all(Radius.circular(36)),
-        ));
+      width: MediaQuery.of(context).size.width,
+      height: 56,
+      child: const BorderTextField(
+        labelFontSize: 24,
+        labelText: "주소 검색",
+        borderColor: Colors.white60,
+        borderRadius: BorderRadius.all(Radius.circular(36)),
+      )
+    );
   }
-
+  
   Widget googleMap() {
     return GoogleMap(
       mapType: MapType.normal,
       markers: Set.from(_markers),
       initialCameraPosition: MainGoogleMapPage._kGooglePlex,
       myLocationButtonEnabled: false,
+      onCameraMoveStarted: () {
+        _panelController.close();
+      },
       onCameraMove: (_position) => {
         _updatePosition(_position),
-        setState(() {
-          _flag = false;
-        }),
+        title = _position.target.latitude.toString()
       },
-      onCameraIdle: () => {
-        debugPrint("call address api"),
-      },
-    );
-  }
-
-  Widget AddressDetail(minHeight, maxHeight) {
-    return SlidingUpPanel(
-      panel: AddressDetailWidget(),
-      borderRadius: BorderRadius.only(
-          topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-      minHeight: minHeight,
-      maxHeight: maxHeight,
-      body: mainGoogleMapWidget(),
+      onCameraIdle: () {
+        _addressDetailProvider.setTitle(title);
+        },
     );
   }
 
@@ -152,8 +140,16 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     _addressDetailProvider = Provider.of<AddressDetailProvider>(context, listen: false);
     return Scaffold(
       body: SafeArea(
-        child: _flag ? AddressDetail(95.h, 340.h) : AddressDetail(56.h, 340.h),
+        child: SlidingUpPanel(
+          panel: AddressDetailWidget(),
+          borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
+          minHeight: 56.h,
+          maxHeight: 150.h,
+          controller: _panelController,
+          body: mainGoogleMapWidget(),
+        )
       ),
     );
   }
 }
+
