@@ -24,24 +24,24 @@ class AddressDetailWidget extends StatelessWidget {
     _addressDetailProvider = Provider.of<AddressDetailProvider>(context);
 
     return SizedBox(
-      height: 340.h,
+      height: 400.h,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Padding(
-            padding: EdgeInsets.only(top: 16.h, left: 16.w),
+            padding: EdgeInsets.only(top: 2.h, left: 16.w),
             child: SimpleTextWidget(
               text: _addressDetailProvider.title.toString(),
-              fontSize: 24.sp,
+              fontSize: 15.sp,
               color: Colors.black87,
             ),
           ),
+          // Padding(
+          //   padding: EdgeInsets.only(top: 15.h, left: 8.w, right: 8.w),
+          //   child: SimpleTextWidget(text: "일본, 810-0004 Fukuoka, Chuo Ward, Watanabe",fontSize: 16.sp, color: Colors.grey,),
+          // ),
           Padding(
-            padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
-            child: SimpleTextWidget(text: "일본, 810-0004 Fukuoka, Chuo Ward, Watanabe",fontSize: 16.sp, color: Colors.grey,),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
+            padding: EdgeInsets.only(top: 15.h, left: 8.w, right: 8.w),
             child: ElevatedButton(
               style: ElevatedButton.styleFrom(
                 alignment: Alignment.center,

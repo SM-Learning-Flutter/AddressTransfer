@@ -17,6 +17,7 @@ import 'package:logger/logger.dart';
 
 import '../widgets/address_detail_widget.dart';
 
+//위도,경도 -> 장소id -> 장소검색
 class MainGoogleMapPage extends StatefulWidget {
   static const CameraPosition _kGooglePlex = CameraPosition(
     target: LatLng(35.7013120, 139.7747018),
@@ -34,6 +35,9 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   late AddressDetailProvider _addressDetailProvider;
   List<String> _geo = ['test'];
   List<Marker> _markers = [];
+  var logger = Logger(
+    printer: PrettyPrinter(),
+  );
 
   final PanelController _panelController = PanelController();
 
@@ -46,7 +50,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
         borderRadius: BorderRadius.all(Radius.circular(8))
       ),
       child: Column(
-        children: [
+        children: <Widget>[
           SimpleTextWidget(text: "Latitude ::${target.latitude}", fontSize: 24),
           SimpleTextWidget(text: "Longitude :: ${target.longitude}", fontSize: 24,)
         ],
@@ -54,71 +58,53 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     );
   }
 
-  void showShortHeightModalBottomSheet(BuildContext context) {
-    showBarModalBottomSheet(
-        context: context,
-        enableDrag: true,
-        bounce: true,
-        isDismissible: true,
-        builder: (BuildContext context) {
-          return SizedBox(
-            // SizedBox로 감싸고 height로 높이를 설정.
-            height: 100,
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: <Widget>[
-                  FutureBuilder(
-                      future: getMarker(),
-                      builder: (BuildContext context, AsyncSnapshot snapshot) {
-                        //해당 부분은 data를 아직 받아 오지 못했을때 실행되는 부분을 의미한다.
-                        if (snapshot.hasData == false) {
-                          return CircularProgressIndicator();
-                        }
-                        //error가 발생하게 될 경우 반환하게 되는 부분
-                        else if (snapshot.hasError) {
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              'Error: ${snapshot.error}',
-                              style: TextStyle(fontSize: 15),
-                            ),
-                          );
-                        }
-                        // 데이터를 정상적으로 받아오게 되면 다음 부분을 실행하게 되는 것이다.
-                        else {
-                          return Padding(
-                            padding: const EdgeInsets.all(8.0),
-                            child: Text(
-                              snapshot.data.toString(),
-                              style: TextStyle(fontSize: 15),
-                            ),
-                          );
-                        }
-                      }),
-                  ElevatedButton(
-                    child: Text('cancel'),
-                    onPressed: () => Navigator.pop(context),
-                  )
-                ],
-              ),
-            ),
-          );
-        },
-  }
+  // void showShortHeightModalBottomSheet(BuildContext context) {
+  //     FutureBuilder(
+  //         future: getMarker(),
+  //         builder: (BuildContext context, AsyncSnapshot snapshot) {
+  //           logger.i('test');
+  //           //해당 부분은 data를 아직 받아 오지 못했을때 실행되는 부분을 의미한다.
+  //           if (snapshot.hasData == false) {
+  //             _addressDetailProvider.setTitle('...대기 중');
+  //             return CircularProgressIndicator();
+  //           }
+  //           //error가 발생하게 될 경우 반환하게 되는 부분
+  //           else if (snapshot.hasError) {
+  //             _addressDetailProvider.setTitle('api오류');
+  //             return Padding(
+  //               padding: const EdgeInsets.all(8.0),
+  //               child: Text(
+  //                 'Error: ${snapshot.error}',
+  //                 style: TextStyle(fontSize: 15),
+  //               ),
+  //             );
+  //           }
+  //           // 데이터를 정상적으로 받아오게 되면 다음 부분을 실행하게 되는 것이다.
+  //           else {
+  //             logger.i(snapshot.data.toString());
+  //             _addressDetailProvider.setTitle(snapshot.data.toString());
+  //             return Padding(
+  //               padding: const EdgeInsets.all(8.0),
+  //               child: Text(
+  //                 snapshot.data.toString(),
+  //                 style: TextStyle(fontSize: 15),
+  //               ),
+  //             );
+  //           }
+  //         }
+  //     );
+  // }
 
-  Future<String> getMarker() async {
-
+  void getMarker() async {
+    _addressDetailProvider.setTitle('loading');
     String gpsUrl =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=${_markers.last.position.latitude},${_markers.last.position.longitude}&key=${FlutterConfig.get('apiKey')}';
-
     final response = await http.get(Uri.parse(gpsUrl));
 
     if(response.statusCode == 200){
-      _geo.add(jsonDecode(response.body)['results'][0]['formatted_address']);
-      return jsonDecode(response.body)['results'][0]['formatted_address'];
+      _addressDetailProvider.setTitle(jsonDecode(response.body)['results'][0]['formatted_address']);
     } else {
+      _addressDetailProvider.setTitle('api error');
       throw Exception('Failed to load album');
     }
   }
@@ -178,7 +164,8 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
         title = _position.target.latitude.toString()
       },
       onCameraIdle: () {
-        _addressDetailProvider.setTitle(title);
+        getMarker();
+        // _addressDetailProvider.setTitle(title);
         },
     );
   }
