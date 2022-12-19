@@ -22,7 +22,7 @@ class AddressDetailWidget extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(top: 16.h, left: 16.w),
             child: SimpleTextWidget(
-              text: "테스트 이름",
+              text: "하카타역",
               fontSize: 24.sp,
               color: Colors.black87,
             ),
@@ -35,26 +35,16 @@ class AddressDetailWidget extends StatelessWidget {
               color: Colors.grey,
             ),
           ),
-          Padding(
-            padding: EdgeInsets.only(top: 4.h, left: 8.w, right: 8.w),
-            child: SimpleTextWidget(
-              text: "건축물용도",
-              fontSize: 16.sp,
-              color: Colors.grey,
-            ),
+          const SizedBox(height: 20),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+                primary: Colors.green,
+                textStyle: const TextStyle(fontSize: 20)),
+            onPressed: () {
+              print("주소변환");
+            },
+            child: const Text('주소변환'),
           ),
-          Padding(
-            padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
-            child: SimpleTextWidget(
-              text: "url",
-              fontSize: 16.sp,
-              color: Colors.grey,
-            ),
-          ),
-          Padding(
-            padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
-            child: buildPlaceImageList(images),
-          )
         ],
       ),
     );

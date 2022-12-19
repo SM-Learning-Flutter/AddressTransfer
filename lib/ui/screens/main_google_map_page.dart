@@ -1,5 +1,8 @@
+import 'dart:ffi';
+
 import 'package:address_transfer/ui/widgets/border_text_field.dart';
 import 'package:address_transfer/ui/widgets/simple_text_widget.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -10,7 +13,7 @@ import '../widgets/address_detail_widget.dart';
 
 class MainGoogleMapPage extends StatefulWidget {
   static const CameraPosition _kGooglePlex = CameraPosition(
-    target: LatLng(37.4537251, 126.7960716),
+    target: LatLng(33.5903547, 130.4017155),
     zoom: 14.4746,
   );
 
@@ -23,6 +26,20 @@ class MainGoogleMapPage extends StatefulWidget {
 class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   List<Marker> _markers = [];
   bool _flag = false;
+
+  Future<dynamic> getAddressDetail() async {
+    // get 메소드로 URL 호출
+    Response placeIdResponse = await Dio().get(
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=${_markers.last.position.latitude},${_markers.last.position.longitude}&key=AIzaSyBXqmRU8SZMvY4QJGGUpz_UXumuxfY6O-o');
+    String placeId = placeIdResponse.data['results'][0]['place_id'];
+
+    Response addressResponse = await Dio().get(
+        'https://maps.googleapis.com/maps/api/geocode/json?place_id=${placeId}&key=AIzaSyBXqmRU8SZMvY4QJGGUpz_UXumuxfY6O-o');
+
+    dynamic components =
+        addressResponse.data['results'][0]['address_components'];
+    return components;
+  }
 
   Widget detailInfo(LatLng target) {
     return Container(
@@ -95,7 +112,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
         }),
       },
       onCameraIdle: () => {
-        debugPrint("call address api"),
+        getAddressDetail(),
       },
     );
   }
@@ -142,7 +159,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: _flag ? AddressDetail(95.h, 340.h) : AddressDetail(56.h, 340.h),
+        child: _flag ? AddressDetail(140.h, 340.h) : AddressDetail(56.h, 340.h),
       ),
     );
   }
