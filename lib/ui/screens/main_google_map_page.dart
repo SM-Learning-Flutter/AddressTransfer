@@ -7,8 +7,10 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 
+import '../provider/address_detail_provider.dart';
 import '../widgets/address_detail_widget.dart';
 
 class MainGoogleMapPage extends StatefulWidget {
@@ -26,19 +28,37 @@ class MainGoogleMapPage extends StatefulWidget {
 class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   List<Marker> _markers = [];
   bool _flag = false;
+  late AddressDetailProvider _addressDetailProvider;
 
-  Future<dynamic> getAddressDetail() async {
+  void getPlaceIds() async {
+    List<String> placeIds = [];
     // get 메소드로 URL 호출
     Response placeIdResponse = await Dio().get(
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=${_markers.last.position.latitude},${_markers.last.position.longitude}&key=AIzaSyBXqmRU8SZMvY4QJGGUpz_UXumuxfY6O-o');
-    String placeId = placeIdResponse.data['results'][0]['place_id'];
 
-    Response addressResponse = await Dio().get(
-        'https://maps.googleapis.com/maps/api/geocode/json?place_id=${placeId}&key=AIzaSyBXqmRU8SZMvY4QJGGUpz_UXumuxfY6O-o');
+    if (placeIdResponse.statusCode == 200) {
+      for (dynamic data in placeIdResponse.data['results']) {
+        placeIds.add(data['place_id']);
+      }
+      getPlaceDetail(placeIds);
+    } else {
+      _addressDetailProvider.setTitle('api error');
+      throw Exception('Failed to load api');
+    }
+  }
 
-    dynamic components =
-        addressResponse.data['results'][0]['address_components'];
-    return components;
+  void getPlaceDetail(List<String> placeIds) async {
+    _addressDetailProvider.clearAddressInfo();
+    for (String placeId in placeIds) {
+      Response addressResponse = await Dio().get(
+          'https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=AIzaSyBXqmRU8SZMvY4QJGGUpz_UXumuxfY6O-o');
+      dynamic response = addressResponse.data['result'];
+      _addressDetailProvider.setAddress(response['formatted_address']);
+      _addressDetailProvider.setLocationName(response['name']);
+      // _addressDetailProvider
+      //     .setPhoneNum(response['international_phone_number']);
+      _addressDetailProvider.setTitle(response['name']);
+    }
   }
 
   Widget detailInfo(LatLng target) {
@@ -51,7 +71,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
           SimpleTextWidget(text: "Latitude ::${target.latitude}", fontSize: 24),
           SimpleTextWidget(
             text: "Longitude :: ${target.longitude}",
-            fontSize: 24,
+            fontSize: 12,
           )
         ],
       ),
@@ -112,7 +132,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
         }),
       },
       onCameraIdle: () => {
-        getAddressDetail(),
+        getPlaceIds(),
       },
     );
   }
@@ -157,9 +177,11 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
 
   @override
   Widget build(BuildContext context) {
+    _addressDetailProvider =
+        Provider.of<AddressDetailProvider>(context, listen: false);
     return Scaffold(
       body: SafeArea(
-        child: _flag ? AddressDetail(140.h, 340.h) : AddressDetail(56.h, 340.h),
+        child: _flag ? AddressDetail(140.h, 540.h) : AddressDetail(50.h, 540.h),
       ),
     );
   }
