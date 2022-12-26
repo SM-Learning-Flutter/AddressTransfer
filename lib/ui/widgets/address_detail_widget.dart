@@ -41,26 +41,10 @@ class AddressDetailWidget extends StatelessWidget {
           //   child: SimpleTextWidget(text: "일본, 810-0004 Fukuoka, Chuo Ward, Watanabe",fontSize: 16.sp, color: Colors.grey,),
           // ),
           Padding(
-            padding: EdgeInsets.only(top: 15.h, left: 8.w, right: 8.w),
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                alignment: Alignment.center,
-                backgroundColor: Colors.blue
-              ),
-              onPressed: () {
-                _addressDetailProvider.setVisibility(!visibility);
-                visibility = !visibility;
-              },
-              child: SimpleTextWidget(text: "주소 변환", fontSize: 16.sp, color: Colors.white,),
-            ),
+            padding: EdgeInsets.only(top: 16.h, left: 16.w, right: 16.w),
+            child: SimpleTextWidget(text: _addressDetailProvider.address.toString(),fontSize: 16.sp, color: Colors.grey,),
           ),
-          AnimatedContainer(
-            duration: Duration(milliseconds: 1000),
-            child: Visibility(
-              visible: _addressDetailProvider.visibility,
-              child: addressResult()
-            ),
-          )
+          addressResult()
         ],
       ),
     );

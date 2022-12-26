@@ -42,7 +42,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   );
 
   final PanelController _panelController = PanelController();
-
+  var totalAddress;
   String title = "";
   
   Widget detailInfo(LatLng target) {
@@ -60,42 +60,6 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     );
   }
 
-  // void showShortHeightModalBottomSheet(BuildContext context) {
-  //     FutureBuilder(
-  //         future: getMarker(),
-  //         builder: (BuildContext context, AsyncSnapshot snapshot) {
-  //           logger.i('test');
-  //           //해당 부분은 data를 아직 받아 오지 못했을때 실행되는 부분을 의미한다.
-  //           if (snapshot.hasData == false) {
-  //             _addressDetailProvider.setTitle('...대기 중');
-  //             return CircularProgressIndicator();
-  //           }
-  //           //error가 발생하게 될 경우 반환하게 되는 부분
-  //           else if (snapshot.hasError) {
-  //             _addressDetailProvider.setTitle('api오류');
-  //             return Padding(
-  //               padding: const EdgeInsets.all(8.0),
-  //               child: Text(
-  //                 'Error: ${snapshot.error}',
-  //                 style: TextStyle(fontSize: 15),
-  //               ),
-  //             );
-  //           }
-  //           // 데이터를 정상적으로 받아오게 되면 다음 부분을 실행하게 되는 것이다.
-  //           else {
-  //             logger.i(snapshot.data.toString());
-  //             _addressDetailProvider.setTitle(snapshot.data.toString());
-  //             return Padding(
-  //               padding: const EdgeInsets.all(8.0),
-  //               child: Text(
-  //                 snapshot.data.toString(),
-  //                 style: TextStyle(fontSize: 15),
-  //               ),
-  //             );
-  //           }
-  //         }
-  //     );
-  // }
 
   void getMarker() async {
     _addressDetailProvider.setTitle('loading');
@@ -104,7 +68,10 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     final response = await http.get(Uri.parse(gpsUrl));
 
     if(response.statusCode == 200){
+      totalAddress = jsonDecode(response.body)['results'][0]['address_components'];
+      logger.i(totalAddress);
       _addressDetailProvider.setTitle(jsonDecode(response.body)['results'][0]['formatted_address']);
+      _addressDetailProvider.setDodobuKen(totalAddress);
     } else {
       _addressDetailProvider.setTitle('api error');
       throw Exception('Failed to load album');
@@ -144,7 +111,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     String gpsUrl =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=${_markers.last.position.latitude},${_markers.last.position.longitude}&key=${FlutterConfig.get('apiKey')}';
     final response = await http.get(Uri.parse(gpsUrl));
-    print("테스트1 :: $gpsUrl");
+    // print("테스트1 :: $gpsUrl");
     if(response.statusCode == 200){
       getPlaceInfo(jsonDecode(response.body)['results'][0]['place_id']);
     } else {
@@ -157,10 +124,12 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     _addressDetailProvider.setTitle('loading');
       String placeUrl =
           "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=${FlutterConfig.get('apiKey')}";
-      print("테스트2 :: $placeUrl");
+      // print("테스트2 :: $placeUrl");
       final response = await http.get(Uri.parse(placeUrl));
 
       if (response.statusCode == 200) {
+        totalAddress = jsonDecode(response.body)['results'][0]['address_components'];
+        logger.i("위치 : $totalAddress");
         _addressDetailProvider.setTitle(jsonDecode(response.body)["result"]["name"]);
         _addressDetailProvider.setAddress(jsonDecode(response.body)["result"]["formatted_address"]);
         
