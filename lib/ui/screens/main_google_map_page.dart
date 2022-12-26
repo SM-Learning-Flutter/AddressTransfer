@@ -1,4 +1,6 @@
 
+import 'dart:convert';
+
 import 'package:address_transfer/ui/provider/address_detail_provider.dart';
 import 'package:address_transfer/ui/widgets/border_text_field.dart';
 import 'package:address_transfer/ui/widgets/simple_text_widget.dart';
@@ -137,6 +139,39 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     });
   }
 
+  void getPlaceId() async {
+    _addressDetailProvider.setTitle('loading');
+    String gpsUrl =
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=${_markers.last.position.latitude},${_markers.last.position.longitude}&key=${FlutterConfig.get('apiKey')}';
+    final response = await http.get(Uri.parse(gpsUrl));
+    print("테스트1 :: $gpsUrl");
+    if(response.statusCode == 200){
+      getPlaceInfo(jsonDecode(response.body)['results'][0]['place_id']);
+    } else {
+      _addressDetailProvider.setTitle('api error');
+      throw Exception('Failed to load album');
+    }
+  }
+
+  void getPlaceInfo(String placeId) async {
+    _addressDetailProvider.setTitle('loading');
+      String placeUrl =
+          "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=${FlutterConfig.get('apiKey')}";
+      print("테스트2 :: $placeUrl");
+      final response = await http.get(Uri.parse(placeUrl));
+
+      if (response.statusCode == 200) {
+        _addressDetailProvider.setTitle(jsonDecode(response.body)["result"]["name"]);
+        _addressDetailProvider.setAddress(jsonDecode(response.body)["result"]["formatted_address"]);
+        
+        _addressDetailProvider.setLocationName(jsonDecode(response.body)["result"]["name"]);
+        _addressDetailProvider.setPhoneNum(jsonDecode(response.body)["result"]["international_phone_number"]);
+      }  else {
+        _addressDetailProvider.setTitle('api error');
+        throw Exception('Failed to load album');
+      }
+  }
+
   Widget searchBarWidget() {
     return SizedBox(
       width: MediaQuery.of(context).size.width,
@@ -164,9 +199,9 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
         title = _position.target.latitude.toString()
       },
       onCameraIdle: () {
-        getMarker();
         // _addressDetailProvider.setTitle(title);
-        },
+        getPlaceId();
+      },
     );
   }
 
@@ -204,9 +239,10 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
       body: SafeArea(
         child: SlidingUpPanel(
           panel: AddressDetailWidget(),
+          header: Container(),
           borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
           minHeight: 56.h,
-          maxHeight: 150.h,
+          maxHeight: 550.h,
           controller: _panelController,
           body: mainGoogleMapWidget(),
         )

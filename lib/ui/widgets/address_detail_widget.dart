@@ -67,40 +67,69 @@ class AddressDetailWidget extends StatelessWidget {
   }
 
   Widget addressResult() {
-    return Column(
-      children: [
-        Padding(
-          padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
-          child: SimpleTextWidget(text: "테스트 주소1", fontSize: 16.sp, color: Colors.grey,),
-        ),
-        Padding(
-          padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
-          child: SimpleTextWidget(text: "테스트 주소2", fontSize: 16.sp, color: Colors.grey,),
-        ),
-        Padding(
-          padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
-          child: SimpleTextWidget(text: "테스트 주소3", fontSize: 16.sp, color: Colors.grey,),
-        ),
-        Padding(
-          padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
-          child: SimpleTextWidget(text: "테스트 주소4", fontSize: 16.sp, color: Colors.grey,),
-        )
-      ],
+    return Padding(
+      padding: EdgeInsets.symmetric(horizontal: 16.w),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
+            child: SimpleTextWidget(text: "도도부현", fontSize: 16.sp, color: Colors.black54,),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
+            child: borderContainer(_addressDetailProvider.dodobuKen.toString()),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
+            child: SimpleTextWidget(text: "시구정촌명", fontSize: 16.sp, color: Colors.black54,),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
+            child: borderContainer(_addressDetailProvider.shiChouSon.toString()),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
+            child: SimpleTextWidget(text: "이후의 주소", fontSize: 16.sp, color: Colors.black54,),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
+            child: borderContainer(_addressDetailProvider.etcAddress.toString()),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
+            child: SimpleTextWidget(text: "체류지 · 호텔명", fontSize: 16.sp, color: Colors.black54,),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
+            child: borderContainer(_addressDetailProvider.locationName.toString()),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
+            child: SimpleTextWidget(text: "일본 내 연락 가능한 전화번호", fontSize: 16.sp, color: Colors.black54,),
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
+            child: borderContainer(_addressDetailProvider.phoneNum.toString()),
+          ),
+        ],
+      ),
     );
   }
-
-  Widget buildPlaceImageList(List<String> images) {
-    return SizedBox(
-      height: 200.h,
-      child: ListView.builder(
-        itemCount: images.length,
-        scrollDirection: Axis.horizontal,
-        itemBuilder: (BuildContext context, int index) {
-          return Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Image.network(images[index]),
-          );
-        }
+  
+  Widget borderContainer(String text) {
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.all(Radius.circular(10)),
+        border: Border.all(color: Colors.grey),
+        color: Colors.white
+      ),
+      padding: EdgeInsets.symmetric(horizontal: 8.w),
+      width: double.infinity,
+      height: 38.h,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SimpleTextWidget(text: text, fontSize: 16, color: Colors.black,),
       ),
     );
   }
