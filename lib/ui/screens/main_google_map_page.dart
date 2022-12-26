@@ -1,6 +1,8 @@
 
+import 'dart:collection';
 import 'dart:convert';
 
+import 'package:address_transfer/model/location.dart';
 import 'package:address_transfer/ui/provider/address_detail_provider.dart';
 import 'package:address_transfer/ui/widgets/border_text_field.dart';
 import 'package:address_transfer/ui/widgets/simple_text_widget.dart';
@@ -32,6 +34,11 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   late AddressDetailProvider _addressDetailProvider;
   
   List<Marker> _markers = [];
+  List<Location> locations = [];
+
+  int placeCount = 0;
+  double latPosition = 35.7013120;
+  double lngPosition = 139.7747018;
 
   final PanelController _panelController = PanelController();
 
@@ -55,39 +62,47 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   @override
   void initState() {
     super.initState();
-    _markers.add(Marker(
-        markerId: MarkerId("1"),
-        draggable: true,
-        onTap: () => print("Marker!"),
-        position: LatLng(35.7013120, 139.7747018)));
   }
 
   void _updatePosition(CameraPosition _position) {
-    var m = _markers.firstWhere((p) => p.markerId == MarkerId('1'),
-        orElse: null);
-    _markers.remove(m);
+    latPosition = _position.target.latitude;
+    lngPosition = _position.target.longitude;
+  }
+
+  void _setMarker(double lat, double lng, String placeId, int index) {
     _markers.add(
       Marker(
-        markerId: MarkerId('1'),
-        position: LatLng(_position.target.latitude, _position.target.longitude),
-        draggable: true,
+        markerId: MarkerId(index.toString()),
+        position: LatLng(lat, lng),
+        draggable: false,
         onTap: () {
-          _panelController.show();
+          getPlaceInfo(placeId);
         }
-      ),
+      )
     );
-    setState(() {
-    });
   }
 
   void getPlaceId() async {
-    _addressDetailProvider.setTitle('loading');
     String gpsUrl =
-        'https://maps.googleapis.com/maps/api/geocode/json?latlng=${_markers.last.position.latitude},${_markers.last.position.longitude}&key=${FlutterConfig.get('apiKey')}';
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latPosition,$lngPosition&key=${FlutterConfig.get('apiKey')}';
     final response = await http.get(Uri.parse(gpsUrl));
     print("테스트1 :: $gpsUrl");
     if(response.statusCode == 200){
-      getPlaceInfo(jsonDecode(response.body)['results'][0]['place_id']);
+      // getPlaceInfo(jsonDecode(response.body)['results'][0]['place_id']);
+      _markers.clear();
+      locations.clear();
+      for (var item in jsonDecode(response.body)['results']) {
+        var location = item["geometry"]["location"];
+        locations.add(Location(location["lat"], location["lng"], item['place_id']));
+      }
+      int index = 0;
+      locations.forEach((element) {
+        _setMarker(element.lat, element.lng, element.placeId, index);
+        index++;
+      });
+      setState(() {
+      });
+      placeCount = locations.length;
     } else {
       _addressDetailProvider.setTitle('api error');
       throw Exception('Failed to load album');
@@ -95,7 +110,6 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   }
 
   void getPlaceInfo(String placeId) async {
-    _addressDetailProvider.setTitle('loading');
       String placeUrl =
           "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=${FlutterConfig.get('apiKey')}";
       print("테스트2 :: $placeUrl");
