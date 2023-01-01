@@ -107,12 +107,16 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   }
 
   void getPlaceId() async {
+
+    logger.i(_markers.last.position.latitude);
+    logger.i(_markers.last.position.longitude);
     _addressDetailProvider.setTitle('loading');
     String gpsUrl =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=${_markers.last.position.latitude},${_markers.last.position.longitude}&key=${FlutterConfig.get('apiKey')}';
     final response = await http.get(Uri.parse(gpsUrl));
     // print("테스트1 :: $gpsUrl");
     if(response.statusCode == 200){
+
       getPlaceInfo(jsonDecode(response.body)['results'][0]['place_id']);
     } else {
       _addressDetailProvider.setTitle('api error');
@@ -126,16 +130,56 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
           "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=${FlutterConfig.get('apiKey')}";
       // print("테스트2 :: $placeUrl");
       final response = await http.get(Uri.parse(placeUrl));
-
+      String shiChouSon = "";
+      String etcAddress = "";
       if (response.statusCode == 200) {
-        totalAddress = jsonDecode(response.body)['results'][0]['address_components'];
-        logger.i("위치 : $totalAddress");
+        totalAddress = jsonDecode(response.body)['result']['address_components'];
+        // logger.i("위치 : $totalAddress");
+        for (var address in totalAddress.reversed.toList()) {
+          switch (address["types"][0]) {
+            case 'country':
+              logger.i("나라 : ${address['long_name']}");
+              break;
+            case 'administrative_area_level_1':
+              _addressDetailProvider.setDodobuKen(address['long_name']);
+              break;
+            case 'locality':
+              shiChouSon = "${shiChouSon + address['long_name']} ";
+              logger.i(shiChouSon);
+              break;
+            case 'sublocality_level_1':
+              shiChouSon = "${shiChouSon + address['long_name']} ";
+              logger.i(shiChouSon);
+              break;
+            case 'sublocality_level_2':
+              shiChouSon = "${shiChouSon + address['long_name']} ";
+              logger.i(shiChouSon);
+              break;
+            case 'sublocality_level_3':
+              etcAddress = "${etcAddress + address['long_name']} ";
+              logger.i('sublocality_level_3');
+              break;
+            case 'sublocality_level_4':
+              logger.i('sublocality_level_4');
+              etcAddress = "${etcAddress + address['long_name']} ";
+              break;
+            case 'premise':
+              etcAddress = "${etcAddress + address['long_name']} ";
+              logger.i('premise');
+              break;
+            default:
+              logger.i("default : $address");
+              break;
+          }
+        }
         _addressDetailProvider.setTitle(jsonDecode(response.body)["result"]["name"]);
-        _addressDetailProvider.setAddress(jsonDecode(response.body)["result"]["formatted_address"]);
-        
         _addressDetailProvider.setLocationName(jsonDecode(response.body)["result"]["name"]);
         _addressDetailProvider.setPhoneNum(jsonDecode(response.body)["result"]["international_phone_number"]);
+
+        _addressDetailProvider.setShiChouSon(shiChouSon);
+        _addressDetailProvider.setEtcAddress(etcAddress);
       }  else {
+        logger.i("위치 api 에러");
         _addressDetailProvider.setTitle('api error');
         throw Exception('Failed to load album');
       }

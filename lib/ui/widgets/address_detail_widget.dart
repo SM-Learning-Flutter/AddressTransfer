@@ -5,8 +5,14 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter/services.dart';
+import 'package:logger/logger.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 
 class AddressDetailWidget extends StatelessWidget {
+  var logger = Logger(
+    printer: PrettyPrinter(),
+  );
   AddressDetailWidget({super.key});
 
   late AddressDetailProvider _addressDetailProvider;
@@ -18,6 +24,20 @@ class AddressDetailWidget extends StatelessWidget {
   ];
 
   bool visibility = false;
+
+  void copyToClipboard() {
+    logger.i(_addressDetailProvider.phoneNum.toString());
+    Clipboard.setData(ClipboardData(text: _addressDetailProvider.phoneNum.toString()));
+  }
+
+  void showToast(String message) {
+    Fluttertoast.showToast(
+        msg: "$message 복사되었습니다.",
+        backgroundColor: Colors.white,
+        toastLength: Toast.LENGTH_SHORT,
+        gravity: ToastGravity.BOTTOM
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -90,7 +110,15 @@ class AddressDetailWidget extends StatelessWidget {
           ),
           Padding(
             padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
-            child: SimpleTextWidget(text: "일본 내 연락 가능한 전화번호", fontSize: 16.sp, color: Colors.black54,),
+            child:
+            TextButton.icon(
+              onPressed: () {
+                copyToClipboard();
+                showToast("전화번호");
+                },
+              icon: const Icon(Icons.copy),
+              label: Text('일본 내 연락 가능한 전화번호'),
+            ),
           ),
           Padding(
             padding: EdgeInsets.only(top: 8.h, left: 8.w, right: 8.w),
