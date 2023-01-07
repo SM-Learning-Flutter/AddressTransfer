@@ -32,10 +32,13 @@ class AddressDetailWidget extends StatelessWidget {
 
   void showToast(String message) {
     Fluttertoast.showToast(
-        msg: "$message 복사되었습니다.",
-        backgroundColor: Colors.white,
-        toastLength: Toast.LENGTH_SHORT,
-        gravity: ToastGravity.BOTTOM
+        msg: "$message 복사되었습니다.", // 메시지 내용
+        toastLength: Toast.LENGTH_SHORT, // 메시지 시간 - 안드로이드
+        gravity: ToastGravity.BOTTOM, // 메시지 위치
+        timeInSecForIosWeb: 1, // 메시지 시간 - iOS 및 웹
+        backgroundColor: Colors.white, // 배경
+        textColor: Color(0xffcdffb7), // 글자
+        fontSize: 16.0 // 글자 크기
     );
   }
 
@@ -110,8 +113,7 @@ class AddressDetailWidget extends StatelessWidget {
           ),
           Padding(
             padding: EdgeInsets.only(top: 16.h, left: 8.w, right: 8.w),
-            child:
-            TextButton.icon(
+            child: TextButton.icon(
               onPressed: () {
                 copyToClipboard();
                 showToast("전화번호");
