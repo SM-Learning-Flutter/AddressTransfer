@@ -1,6 +1,9 @@
 
+import 'dart:collection';
 import 'dart:convert';
 
+import 'package:address_transfer/model/location.dart';
+import 'package:address_transfer/model/place.dart';
 import 'package:address_transfer/ui/provider/address_detail_provider.dart';
 import 'package:address_transfer/ui/widgets/border_text_field.dart';
 import 'package:address_transfer/ui/widgets/simple_text_widget.dart';
@@ -10,6 +13,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_config/flutter_config.dart';
+import 'package:carousel_slider/carousel_slider.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_config/flutter_config.dart';
 import 'dart:convert';
@@ -40,6 +45,12 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   var logger = Logger(
     printer: PrettyPrinter(),
   );
+  List<Location> locations = [];
+  List<Place> placeList = [];
+
+  int placeCount = 0;
+  double latPosition = 35.7013120;
+  double lngPosition = 139.7747018;
 
   final PanelController _panelController = PanelController();
   var totalAddress;
@@ -81,43 +92,56 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
   @override
   void initState() {
     super.initState();
-    _markers.add(Marker(
-        markerId: MarkerId("1"),
-        draggable: true,
-        onTap: () => print("Marker!"),
-        position: LatLng(35.7013120, 139.7747018)));
   }
 
   void _updatePosition(CameraPosition _position) {
-    var m = _markers.firstWhere((p) => p.markerId == MarkerId('1'),
-        orElse: null);
-    _markers.remove(m);
+    latPosition = _position.target.latitude;
+    lngPosition = _position.target.longitude;
+  }
+
+  void _setMarker(double lat, double lng, String placeId, int index) {
     _markers.add(
       Marker(
-        markerId: MarkerId('1'),
-        position: LatLng(_position.target.latitude, _position.target.longitude),
-        draggable: true,
+        markerId: MarkerId(index.toString()),
+        position: LatLng(lat, lng),
+        draggable: false,
         onTap: () {
-          _panelController.show();
+          setPlaceInfo(placeList[index]);
         }
-      ),
+      )
     );
-    setState(() {
-    });
   }
 
   void getPlaceId() async {
-
-    logger.i(_markers.last.position.latitude);
-    logger.i(_markers.last.position.longitude);
-    _addressDetailProvider.setTitle('loading');
     String gpsUrl =
-        'https://maps.googleapis.com/maps/api/geocode/json?latlng=${_markers.last.position.latitude},${_markers.last.position.longitude}&key=${FlutterConfig.get('apiKey')}';
+        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$latPosition,$lngPosition&key=${FlutterConfig.get('apiKey')}';
     final response = await http.get(Uri.parse(gpsUrl));
     // print("테스트1 :: $gpsUrl");
     if(response.statusCode == 200){
-
-      getPlaceInfo(jsonDecode(response.body)['results'][0]['place_id']);
+      // getPlaceInfo(jsonDecode(response.body)['results'][0]['place_id']);
+      _markers.clear();
+      locations.clear();
+      placeList.clear();
+      for (var item in jsonDecode(response.body)['results']) {
+        var location = item["geometry"]["location"];
+        locations.add(Location(location["lat"], location["lng"], item['place_id']));
+      }
+      int index = 0;
+      locations.forEach((element) {
+        _setMarker(element.lat, element.lng, element.placeId, index);
+        index++;
+      });
+      placeList.addAll(
+          await getPlaceInfo(
+              locations
+                  .map((i) => i.placeId)
+                  .toList()
+          )
+      );
+      setState(() {
+        print("갱신 테스트");
+      });
+      placeCount = locations.length;
     } else {
       _addressDetailProvider.setTitle('api error');
       throw Exception('Failed to load album');
@@ -183,6 +207,14 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
         _addressDetailProvider.setTitle('api error');
         throw Exception('Failed to load album');
       }
+      return _placeList;
+  }
+
+  void setPlaceInfo(Place place) {
+    _addressDetailProvider.setTitle(place.title);
+    _addressDetailProvider.setAddress(place.address);
+    _addressDetailProvider.setLocationName(place.locationName);
+    _addressDetailProvider.setPhoneNum(place.phoneNum);
   }
 
   Widget searchBarWidget() {
@@ -197,6 +229,31 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
       )
     );
   }
+
+  Widget _placeList() {
+    return CarouselSlider(
+      options: CarouselOptions(height: 100.0),
+      items: placeList.map((i) {
+        return Builder(
+          builder: (BuildContext context) {
+            return Container(
+                width: MediaQuery.of(context).size.width,
+                margin: EdgeInsets.symmetric(horizontal: 5.0, vertical: 10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(10)),
+                  border: Border.all(color: Colors.grey),
+                  color: Colors.white
+                ),
+                child: SimpleTextWidget(
+                  text: i.title,
+                  fontSize: 16,
+                )
+            );
+          },
+        );
+      }).toList(),
+    );
+  }
   
   Widget googleMap() {
     return GoogleMap(
@@ -205,7 +262,6 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
       initialCameraPosition: MainGoogleMapPage._kGooglePlex,
       myLocationButtonEnabled: false,
       onCameraMoveStarted: () {
-        _panelController.close();
       },
       onCameraMove: (_position) => {
         _updatePosition(_position),
@@ -241,6 +297,10 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
           padding: const EdgeInsets.all(16.0),
           child: searchBarWidget(),
         ),
+        Align(
+            alignment: Alignment.bottomCenter,
+            child: _placeList()
+        )
       ],
     );
   }
@@ -250,15 +310,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     _addressDetailProvider = Provider.of<AddressDetailProvider>(context, listen: false);
     return Scaffold(
       body: SafeArea(
-        child: SlidingUpPanel(
-          panel: AddressDetailWidget(),
-          header: Container(),
-          borderRadius: BorderRadius.only(topLeft: Radius.circular(20), topRight: Radius.circular(20)),
-          minHeight: 56.h,
-          maxHeight: 550.h,
-          controller: _panelController,
-          body: mainGoogleMapWidget(),
-        )
+        child: mainGoogleMapWidget()
       ),
     );
   }
