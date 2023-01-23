@@ -30,20 +30,20 @@ class AddressDetailWidget extends StatelessWidget {
           Padding(
             padding: EdgeInsets.only(top: 16.h, left: 16.w),
             child: SimpleTextWidget(
-              text: _addressDetailProvider.title[0].toString(),
-              fontSize: 18.sp,
+              text: _addressDetailProvider.title.toString(),
+              fontSize: 24.sp,
               color: Colors.black87,
             ),
           ),
           Padding(
             padding: EdgeInsets.only(top: 16.h, left: 16.w, right: 16.w),
             child: SimpleTextWidget(
-              text: _addressDetailProvider.address[0].toString(),
+              text: _addressDetailProvider.address.toString(),
               fontSize: 16.sp,
               color: Colors.grey,
             ),
           ),
-          buildPlaceList(images),
+          addressResult()
         ],
       ),
     );
@@ -119,6 +119,26 @@ class AddressDetailWidget extends StatelessWidget {
             child: borderContainer(_addressDetailProvider.phoneNum.toString()),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget borderContainer(String text) {
+    return Container(
+      decoration: BoxDecoration(
+          borderRadius: BorderRadius.all(Radius.circular(10)),
+          border: Border.all(color: Colors.grey),
+          color: Colors.white),
+      padding: EdgeInsets.symmetric(horizontal: 8.w),
+      width: double.infinity,
+      height: 38.h,
+      child: Align(
+        alignment: Alignment.centerLeft,
+        child: SimpleTextWidget(
+          text: text,
+          fontSize: 16,
+          color: Colors.black,
+        ),
       ),
     );
   }
