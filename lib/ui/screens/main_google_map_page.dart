@@ -107,7 +107,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
       placeCount = locations.length;
     } else {
       _addressDetailProvider.setTitle('api error');
-      throw Exception('Failed to load album');
+      throw Exception('Failed to load address');
     }
   }
 
@@ -172,7 +172,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
                     border: Border.all(color: Colors.grey),
                     color: Colors.white),
                 child: SimpleTextWidget(
-                  text: '${i.lng}',
+                  text: i.title,
                   fontSize: 16,
                 ));
           },
