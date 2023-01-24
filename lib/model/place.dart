@@ -4,5 +4,6 @@ class Place {
   String address;
   String locationName;
   String phoneNum;
-  Place(this.title, this.address, this.locationName, this.phoneNum);
+  String image;
+  Place(this.title, this.address, this.locationName, this.phoneNum, this.image);
 }

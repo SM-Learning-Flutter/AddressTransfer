@@ -18,7 +18,7 @@ import 'package:carousel_slider/carousel_slider.dart';
 import 'package:http/http.dart' as http;
 import 'package:flutter_config/flutter_config.dart';
 import 'dart:convert';
-import '../../model/geoApi.dart';
+// import '../../model/geoApi.dart';
 import 'dart:developer';
 import 'package:logger/logger.dart';
 
@@ -118,13 +118,17 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     final response = await http.get(Uri.parse(gpsUrl));
     // print("테스트1 :: $gpsUrl");
     if(response.statusCode == 200){
+
       // getPlaceInfo(jsonDecode(response.body)['results'][0]['place_id']);
       _markers.clear();
       locations.clear();
       placeList.clear();
       for (var item in jsonDecode(response.body)['results']) {
-        var location = item["geometry"]["location"];
-        locations.add(Location(location["lat"], location["lng"], item['place_id']));
+        if (item['address_components'][0]["types"][0] == "premise"){
+          logger.i("getPlaceInfo : ${item}");
+          var location = item["geometry"]["location"];
+          locations.add(Location(location["lat"], location["lng"], item['place_id']));
+        }
       }
       int index = 0;
       locations.forEach((element) {
@@ -148,7 +152,39 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     }
   }
 
-  void getPlaceInfo(String placeId) async {
+  Future<List<Place>> getPlaceInfo(List<String> placeIdList) async {
+    List<Place> _placeList = [];
+    for (var id in placeIdList) {
+      String placeUrl =
+          "https://maps.googleapis.com/maps/api/place/details/json?place_id=$id&key=${FlutterConfig.get('apiKey')}";
+      final response = await http.get(Uri.parse(placeUrl));
+      if (response.statusCode == 200) {
+
+        var image = jsonDecode(response.body)["result"]["icon"] ?? "https://emojipedia-us.s3.dualstack.us-west-1.amazonaws.com/thumbs/160/google/55/regional-indicator-symbol-letter-x_1f1fd.png";
+        image = image == "https://maps.gstatic.com/mapfiles/place_api/icons/v1/png_71/geocode-71.png" ? "https://cdn-icons-png.flaticon.com/512/6676/6676508.png" : image;
+        _placeList.add(Place(
+            jsonDecode(response.body)["result"]["name"],
+            jsonDecode(response.body)["result"]["formatted_address"],
+            jsonDecode(response.body)["result"]["name"],
+            "-",
+            image
+        ));
+      } else {
+        _placeList.add(
+            Place(
+                'api error',
+                "-",
+                '-',
+                "-",
+                ""
+            )
+        );
+      }
+    }
+    return _placeList;
+  }
+
+  Future<Widget Function()> getPlaceInfoTest(String placeId) async {
     _addressDetailProvider.setTitle('loading');
       String placeUrl =
           "https://maps.googleapis.com/maps/api/place/details/json?place_id=$placeId&key=${FlutterConfig.get('apiKey')}";
@@ -244,9 +280,19 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
                   border: Border.all(color: Colors.grey),
                   color: Colors.white
                 ),
-                child: SimpleTextWidget(
-                  text: i.title,
-                  fontSize: 16,
+
+                child: Row(
+                  children: [
+                    SizedBox(
+                        height: 50,
+                        width: 50,
+                        child: Image.network(i.image)),
+                    Text(i.title,style: const TextStyle(
+                      color: Colors.black,
+                      fontSize: 18,
+                      ),
+                    ),
+                  ]
                 )
             );
           },
