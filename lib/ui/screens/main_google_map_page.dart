@@ -1,5 +1,3 @@
-import 'dart:ffi';
-
 import 'dart:collection';
 import 'dart:convert';
 
@@ -8,19 +6,16 @@ import 'package:address_transfer/model/place.dart';
 import 'package:address_transfer/ui/provider/address_detail_provider.dart';
 import 'package:address_transfer/ui/widgets/border_text_field.dart';
 import 'package:address_transfer/ui/widgets/simple_text_widget.dart';
-import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import 'package:provider/provider.dart';
 import 'package:sliding_up_panel/sliding_up_panel.dart';
 import 'package:provider/provider.dart';
 import 'package:flutter_config/flutter_config.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:http/http.dart' as http;
 
-import '../provider/address_detail_provider.dart';
 import '../widgets/address_detail_widget.dart';
 
 class MainGoogleMapPage extends StatefulWidget {
@@ -60,7 +55,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
           SimpleTextWidget(text: "Latitude ::${target.latitude}", fontSize: 24),
           SimpleTextWidget(
             text: "Longitude :: ${target.longitude}",
-            fontSize: 12,
+            fontSize: 24,
           )
         ],
       ),
@@ -77,7 +72,8 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
     lngPosition = _position.target.longitude;
   }
 
-  void _setMarker(double lat, double lng, String placeId, int index) {
+  void _setMarker(double lat, double lng, int index) {
+    _markers.clear();
     _markers.add(Marker(
         markerId: MarkerId(index.toString()),
         position: LatLng(lat, lng),
@@ -102,11 +98,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
         locations
             .add(Location(location["lat"], location["lng"], item['place_id']));
       }
-      int index = 0;
-      locations.forEach((element) {
-        _setMarker(element.lat, element.lng, element.placeId, index);
-        index++;
-      });
+      _setMarker(locations[0].lat, locations[0].lng, 0);
       placeList
           .addAll(await getPlaceInfo(locations.map((i) => i.placeId).toList()));
       setState(() {
@@ -127,12 +119,15 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
       final response = await http.get(Uri.parse(placeUrl));
       if (response.statusCode == 200) {
         _placeList.add(Place(
-            jsonDecode(response.body)["result"]["name"],
-            jsonDecode(response.body)["result"]["formatted_address"],
-            jsonDecode(response.body)["result"]["name"],
-            "-"));
+          jsonDecode(response.body)["result"]["name"],
+          jsonDecode(response.body)["result"]["formatted_address"],
+          jsonDecode(response.body)["result"]["name"],
+          "-",
+          jsonDecode(response.body)["result"]["geometry"]["location"]["lat"],
+          jsonDecode(response.body)["result"]["geometry"]["location"]["lng"],
+        ));
       } else {
-        _placeList.add(Place('api error', "-", '-', "-"));
+        _placeList.add(Place('api error', "-", '-', "-", 0, 0));
       }
     }
     return _placeList;
@@ -159,7 +154,13 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
 
   Widget _placeList() {
     return CarouselSlider(
-      options: CarouselOptions(height: 100.0),
+      options: CarouselOptions(
+          height: 100.0,
+          onPageChanged: (index, reason) {
+            setState(() {
+              _setMarker(placeList[index].lat, placeList[index].lng, index);
+            });
+          }),
       items: placeList.map((i) {
         return Builder(
           builder: (BuildContext context) {
@@ -171,7 +172,7 @@ class _MainGoogleMapPageState extends State<MainGoogleMapPage> {
                     border: Border.all(color: Colors.grey),
                     color: Colors.white),
                 child: SimpleTextWidget(
-                  text: i.title,
+                  text: '${i.lng}',
                   fontSize: 16,
                 ));
           },

@@ -143,26 +143,6 @@ class AddressDetailWidget extends StatelessWidget {
     );
   }
 
-  Widget borderContainer(String text) {
-    return Container(
-      decoration: BoxDecoration(
-          borderRadius: BorderRadius.all(Radius.circular(10)),
-          border: Border.all(color: Colors.grey),
-          color: Colors.white),
-      padding: EdgeInsets.symmetric(horizontal: 8.w),
-      width: double.infinity,
-      height: 38.h,
-      child: Align(
-        alignment: Alignment.centerLeft,
-        child: SimpleTextWidget(
-          text: text,
-          fontSize: 16,
-          color: Colors.black,
-        ),
-      ),
-    );
-  }
-
   Widget buildPlaceList(List<String> images) {
     return SizedBox(
       height: 300.h,
